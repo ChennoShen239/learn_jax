@@ -1,0 +1,1 @@
+This is some notes that I take for using jax in quant macro, which is surprisingly fast and should be sth fun to handle.
