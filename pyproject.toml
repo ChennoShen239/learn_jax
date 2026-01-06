@@ -16,5 +16,6 @@ dependencies = [
     "plotly>=6.5.0",
     "pyyaml>=6.0.3",
     "quantecon>=0.10.1",
+    "swanlab>=0.7.6",
 ]
 

@@ -1,0 +1,131 @@
+---
+title: "EGM using JAX"
+author: "Chen Gao"
+date: today
+
+mainfont: "Libertinus Serif"
+mathfont: "Libertinus Math"
+jupyter: python3
+filters:
+    - black-formatter
+
+format: pdf
+---
+
+Before going to NN, let's look at the basic EGM algorithm.
+
+Consider this problem:
+$$
+\max \mathbb{E} \sum_{t=0}^{\infty} \beta^t u(c_t)
+$$
+subject to:
+$$
+a_{t+1} \leq R(a_t - c_t)  + y_{t+1},
+    \quad c_t \geq 0,
+    \quad a_t \geq 0
+    \quad t = 0, 1, \ldots
+$$
+
+where $\{y_t\}$ is a Markov chain with transition matrix $P$.
+
+$$
+\log y_{t+1} = \rho \log y_t + \nu \epsilon_{t+1}
+$$
+
+where $\epsilon_{t+1} \sim N(0,1)$.
+
+We use a CRRA utility function:
+$$
+u(c) = \frac{c^{1-\gamma}}{1-\gamma}
+$$
+
+Define the model as a namedtuple:
+```{python}
+import jax
+import jax.numpy as jnp
+import quantecon as qe
+```
+Now let's define the model:
+
+```{python}
+@jax.jit
+def create_model(
+    beta=0.99,
+    R=1.01,
+    gamma=2.0,
+    a_max=20.0,
+    a_min=1e-10,
+    a_size=200,
+    rho=0.99,
+    nu=0.02,
+    y_size=25,
+):
+    # require R β < 1 for convergence
+    assert R * beta < 1, "Stability condition failed."
+
+    a_grid = jnp.linspace(a_min, a_max, a_size)
+    mc = qe.tauchen(n=y_size, rho=rho, sigma=nu)
+    y_grid, Q = jnp.exp(mc.state_values), jnp.array(mc.P)
+    params = (beta, R, gamma)
+    sizes = (a_size, y_size)
+    arrays = (a_grid, y_grid, Q)
+    return params, sizes, arrays
+```
+
+Alright, now let's look at the problem itself.
+
+- State: $(a_t, y_t) \in \mathcal{S} := \mathcal{A} \times \mathcal{Y}$
+- Action: $\sigma^*: \mathcal{S} \to \mathbb{R}_+$ where 
+$$
+c = \sigma^*(a, Y) , a' = R(a - c) + y' = R(a - \sigma^*(a, y)) + y'
+$$
+
+Now let's consider the Lagrangian:
+
+$$
+\mathcal{L} = \mathbb{E} \sum_{t=0}^{\infty} \beta^t \left[ u(c_t) + \lambda_t (a_{t+1} - R(a_t - c_t) - y_{t+1}) + \mu_t (a_t - c_t) \right]
+$$  
+
+
+Taking foc wrt $c_t$:
+$$
+\frac{\partial \mathcal{L}}{\partial c_t} = \beta^t \left[ u'(c_t) + \lambda_t R - \mu_t \right] = 0
+$$
+
+That is, $u'(c_t) = \mu_t - \lambda_t R$.
+
+Taking foc wrt $a_{t+1}$:
+$$
+\frac{\partial \mathcal{L}}{\partial a_{t+1}} = \beta^t \lambda_t -  \beta^{t+1} \lambda_{t+1}R +\beta^{t+1} \mu_{t+1} = 0
+$$
+That is,  $\lambda_t =  \beta \mathbb{E}_t[\lambda_{t+1}R-\mu_{t+1}]=-\beta \mathbb{E}_t[u'(c_{t+1})]$, so 
+$$
+u'(c_t)-\mu_t = \beta R \mathbb{E}_t[u'(c_{t+1})]
+$$
+
+or equivalently:
+$$
+u'(c_t) = \mu_t + \beta R \mathbb{E}_t[u'(c_{t+1})] \ge  \beta R \mathbb{E}_t[u'(c_{t+1})] 
+$$
+and the equality strictly holds if $\mu_t =0 \Rightarrow a_t > c_t$.
+
+so we can write the Euler equation as:
+$$
+u'(c_t) = \max\{u'(a_t), \beta R \mathbb{E}_t[u'u(c_{t+1})]\}
+$$
+
+For simplicity, we remove the time index $t$. Then we have:
+$$
+u'(c) = \max\{u'(a), \beta R \mathbb{E}[u'(c')]\}
+$${#eq-euler}
+substituting $c=\sigma(a,y)$,$c' = R(a - c) + y'$ into @eq-euler, we get:
+
+$$
+(u' \circ \sigma) (a, y) = \max\{u'(a), \beta R \mathbb{E}[(u' \circ \sigma)(R(a - \sigma(a, y)) + y', y')]\}
+$$
+Given mapping $\sigma$, we can define the mapping $K\sigma:\mathcal{S} \to [0,a]$ as the $c\in [0,a]$ that solves:
+
+$$
+u'(c) = \max\{u'(a), \beta R \mathbb{E}[(u' \circ \sigma)(R(a - c) + y', y')]\}
+$$
+
