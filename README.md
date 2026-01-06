@@ -3,13 +3,13 @@
 This repo is a scratchpad for doing **quantitative macro** with **JAX**, where:
 
 - **state space** can be big,  
-- **value / policy iteration** is embarrassingly parallel, and  
+- **value / policy iteration** is parallelled using `vmap`, and  
 - we want everything **JIT-compiled on the metal** instead of crawling in pure Python.
 
 ### What lives here?
 
 - **`main.py`**: quick experiments / playground.
-- **`aiyagari_jax.*`**: Aiyagari-style heterogeneous-agent model in JAX  
+- **`aiyagari_jax.qmd`**: Aiyagari-style heterogeneous-agent model in JAX  
   - vectorized Bellman / EGM style operations  
   - `jit`-compiled stationary equilibrium search
 - **`VFI.ipynb`**, **`opt_savings_2.ipynb`**, **`OPI_HPI.ipynb`**, etc.: assorted notebooks for
