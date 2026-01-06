@@ -1,14 +1,36 @@
 /.luarc.json
+
 # OS / editor
 .DS_Store
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
 .venv/
+env/
+ENV/
 .env
+.venv
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pytype/
+.coverage
+htmlcov/
+.tox/
+.python-version
 
 # Jupyter / Quarto
 .ipynb_checkpoints/
@@ -16,6 +38,22 @@ __pycache__/
 *.html
 *.pdf
 *_files/
+.quarto/
 
 # Quarto extensions (installed locally, can be re-fetched)
 _extensions/
+
+# JAX / ML
+*.pkl
+*.h5
+*.hdf5
+*.ckpt
+wandb/
+mlruns/
+.neptune/
+
+# Data files (uncomment if you don't want to track data)
+# *.csv
+# *.parquet
+# *.feather
+# data/
