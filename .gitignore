@@ -1,0 +1,21 @@
+/.luarc.json
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# Jupyter / Quarto
+.ipynb_checkpoints/
+*_cache/
+*.html
+*.pdf
+*_files/
+
+# Quarto extensions (installed locally, can be re-fetched)
+_extensions/
