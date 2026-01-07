@@ -7,6 +7,7 @@ mainfont: "Libertinus Serif"
 jupyter: python3
 filters:
     - black-formatter
+toc: true
 
 ---
 
@@ -18,8 +19,12 @@ We start with the imports.
 import jax
 import jax.numpy as jnp
 import time
+import quantecon as qe
 from collections import namedtuple
 import matplotlib.pyplot as plt
+import warnings
+
+warnings.filterwarnings("ignore")
 ```
 
 let's use 64 bit floats here.
@@ -104,16 +109,18 @@ HH = namedtuple("HH", ("beta", "a_grid", "z_grid", "Pi"))
 
 def create_HH(
     beta=0.96,
-    Pi=[[0.9, 0.1], [0.1, 0.9]],
-    z_grid=[0.1, 1.0],
-    a_min=-1,
+    a_min=1e-10,
     a_max=20,
-    a_size=500,
+    a_size=400,
 ):
+
+    z_grid, Pi = jnp.array([0.1, 1.0]), jnp.array([[0.9, 0.1], [0.1, 0.9]])
     a_grid = jnp.linspace(a_min, a_max, a_size)
-    z_grid, Pi = map(jnp.array, (z_grid, Pi))
     return HH(beta=beta, a_grid=a_grid, z_grid=z_grid, Pi=Pi)
 ```
+:::{.callout-warning}
+In this version of code, the HPI falls when we have some tricky `a_size` like 500 or 1000, I don't know why but it seems that currently this is enough.\
+:::
 
 we use a CRRA utility function here.
 
@@ -343,20 +350,13 @@ So here is the Howard policy iteration.
 from jax import debug
 
 
-@jax.jit(static_argnums=(4,))
-def HPI_loop(hh, prices, max_iter=10000, tol=1e-8, verbose=True):
+@jax.jit
+def HPI_loop(hh, prices, max_iter=10000, tol=1e-8):
     def body_fun(k_v_err):
         k, v, err = k_v_err
         sigma_p = get_greedy(v, hh, prices)
         v_sigma_p = get_v_sigma(hh, prices, sigma_p)
         err = jnp.max(jnp.abs(v_sigma_p - v))
-        if verbose:
-            jax.lax.cond(
-                k % 5 == 0,
-                lambda _: debug.print("Concluded loop {k} with error {err}.", k=k, err=err),
-                lambda _: None,
-                operand=None,
-            )
         return k + 1, v_sigma_p, err
 
     def cond_fun(k_v_err):
@@ -580,7 +580,7 @@ def G(K, firm, hh):
     r = r_given_k(K, firm)
     w = w_given_r(r, firm)
     prices = create_prices(r=r, w=w)
-    _, sigma = HPI_loop(hh, prices, verbose=False)
+    _, sigma = HPI_loop(hh, prices)
     return capital_supply(sigma, hh)
 ```
 
@@ -616,7 +616,7 @@ $$K_{n+1} = \alpha K_n + (1-\alpha) G(K_n)$$
 
 ```{python}
 @jax.jit(static_argnums=(6,))
-def equilibrium_damped(K0, firm, hh, alpha=0.6, max_iter=1000, tol=1e-8, verbose=True):
+def equilibrium_damped(K0, firm, hh, alpha=0.6, max_iter=100, tol=1e-8, verbose=True):
     def body_fun(k_K_err):
         k, K, err = k_K_err
         K_next = alpha * K + (1 - alpha) * G(K, firm, hh)
@@ -645,11 +645,11 @@ Let's test the `equilibrium_damped` function:
 K0 = 6
 firm = create_firm()
 hh = create_HH()
-K_star = equilibrium_damped(K0, firm, hh, verbose=False)
+K_star = equilibrium_damped(K0, firm, hh, verbose=True)
 print(f"Equilibrium capital stock: {K_star}")
 
 start_time = time.time()
-K_star = equilibrium_damped(K0, firm, hh, verbose=False).block_until_ready()
+K_star = equilibrium_damped(K0, firm, hh, verbose=True).block_until_ready()
 end_time = time.time()
 damped_time = end_time - start_time
 print(f"Time used: {damped_time} seconds")

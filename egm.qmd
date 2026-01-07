@@ -10,6 +10,9 @@ filters:
     - black-formatter
 
 format: pdf
+execute: 
+  keep-ipynb: true
+  error: true
 ---
 
 Before going to NN, let's look at the basic EGM algorithm.
