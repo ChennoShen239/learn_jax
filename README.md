@@ -12,6 +12,9 @@ This repo is a scratchpad for doing **quantitative macro** with **JAX**, where:
 - **`aiyagari_jax.qmd`**: Aiyagari-style heterogeneous-agent model in JAX  
   - vectorized Bellman / EGM style operations  
   - `jit`-compiled stationary equilibrium search
+- **`egm.qmd`**: endogenous grid method (EGM) implementation and notes  
+  - compares EGM to standard value function iteration  
+  - includes policy function plots saved as `egm.html` / `egm.pdf`
 - **`VFI.ipynb`**, **`opt_savings_2.ipynb`**, **`OPI_HPI.ipynb`**, etc.: assorted notebooks for
   - value function iteration benchmarks,
   - optimal savings problems,
