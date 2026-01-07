@@ -14,7 +14,6 @@ __pycache__/
 .ipynb_checkpoints/
 *_cache/
 *.html
-*.pdf
 *_files/
 
 # Quarto extensions (installed locally, can be re-fetched)
