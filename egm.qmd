@@ -45,6 +45,11 @@ import jax
 import jax.numpy as jnp
 import quantecon as qe
 import time
+import matplotlib.pyplot as plt
+import matplotlib
+
+matplotlib.rcParams["text.usetex"] = True
+matplotlib.rcParams["text.latex.preamble"] = r"\usepackage{libertinus}"
 
 jax.config.update("jax_enable_x64", True)
 ```
@@ -401,9 +406,8 @@ Let's first look at the result:
 ```{python}
 # | label: fig-egm-policy
 # | fig-cap: "EGM Policy Function"
-# ｜ code-fold: true
+# | code-fold: true
 
-import matplotlib.pyplot as plt
 
 # for egm, let's convert savings to assets
 a_grid = R * s_grid[:, jnp.newaxis] + y_grid[jnp.newaxis, :]
